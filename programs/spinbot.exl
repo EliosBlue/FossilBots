@@ -1,0 +1,11 @@
+mode clockwise {
+  forever {
+    turnRight
+  }
+}
+
+mode counterClockwise {
+  forever {
+    turnLeft
+  }
+}
