@@ -36,8 +36,8 @@ instance Controller ELController where
   -- Stepping a bot to a new state works by:
   --   1. Passing the controller's program to the ExampleLang interpreter
   --   2. Updating the controller with the program the evaluator stepped to
-  --   3. Updating the random number generator in the interpreter.
-  --   4. Returning the updated controller and the newly evaluated state.
+  --   3. Updating the random number generator in the interpreter
+  --   4. Returning the updated controller and the newly evaluated state
   stepBot cont _ _ _ state =
       let prog = program cont
           gen = stdGen . interpreter $ cont
