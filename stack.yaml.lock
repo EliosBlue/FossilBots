@@ -7,14 +7,14 @@ packages:
 - completed:
     name: fryxbots
     pantry-tree:
-      sha256: afca0c2548b801ed4d0988524e6391d9ce3a1f93d11fb94bf57155ad6ffffea3
+      sha256: 9f3eb0f15acac2f40cf949351f1a5e5421e0cd1be213fc8efb80d648feb2df7a
       size: 1636
-    sha256: a3630fe85b44d6f0d13654e6c1856f0a48acc4bca8160ccfcc286ac33a892fb7
-    size: 14972
-    url: https://github.com/rcdickerson/fryxbots/archive/fb598e02855ce4b667a6651af93addb870dc07c4.tar.gz
+    sha256: f9f7796dd852782f6a84f31c0df5191ae30173d67ca8d46ce8ead065b5e8a958
+    size: 15180
+    url: https://github.com/rcdickerson/fryxbots/archive/943da4cde220567faad51406d60f93af1c1f09e3.tar.gz
     version: 0.1.0.0
   original:
-    url: https://github.com/rcdickerson/fryxbots/archive/fb598e02855ce4b667a6651af93addb870dc07c4.tar.gz
+    url: https://github.com/rcdickerson/fryxbots/archive/943da4cde220567faad51406d60f93af1c1f09e3.tar.gz
 snapshots:
 - completed:
     sha256: 5524530ac8c0fd4c9d7488442ff14edb0fcbf4989b928b86398f94f367e01ee3
