@@ -2,6 +2,7 @@
 --
 -- The grammar of ExampleLang is as follows:
 --
+--   lang  ::= modes | term
 --   modes ::= mode name { term }
 --           | modes*
 --   term  ::= forever { term }

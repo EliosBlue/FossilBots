@@ -20,16 +20,12 @@
 --   <mode name {t} m, s> -> <m, s[cmd := idle]>
 --
 --
---  --------------------------------------------- ExlMode2
---   <mode name {t} m, s> -> <t, s[cmd := idle]>
---
---
 --  ------------------------------------------------------ ExlForever
 --   <forever {t}, s> -> <t; forever {t}, s[cmd := idle]>
 --
 --
 --  ----------------------------------------------- ExlTurnLeft
---   <turnLeft, s> -> <noop, s[cmd := turnLeft]>
+--   <turnLeft, s> -> <noop, s[cmd := RotateLeft]>
 --
 --
 --  ------------------------------------------------ ExlTurnRight
@@ -84,7 +80,8 @@ evalTerm term state =
                          , setCommand Cmd.Idle state )
     Lang.TurnLeft  -> (Lang.Noop, setCommand Cmd.RotateLeft state)
     Lang.TurnRight -> (Lang.Noop, setCommand Cmd.RotateRight state)
-    Lang.Seq lhs rhs -> let (term', state') = evalTerm lhs state
-                         in if term' == Lang.Noop
-                            then (rhs, state')
-                            else (term', state')
+    Lang.Seq lhs rhs -> let (termLhs', stateLhs') = evalTerm lhs state
+                            (termRhs', stateRhs') = evalTerm rhs state
+                        in if lhs == Lang.Noop
+                           then (termRhs', stateRhs')
+                           else (Lang.Seq termLhs' rhs, stateLhs')

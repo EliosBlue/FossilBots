@@ -3,6 +3,7 @@
 -- Uses Megaparsec to parse ExampleLang terms.
 --
 -- The ExampleLang grammar:
+--   lang  ::= modes | term
 --   modes ::= mode name { term }
 --           | modes*
 --   term  ::= forever { term }
@@ -11,8 +12,8 @@
 --           | term; term
 --           | noop
 --
--- where "modes" is the top-level production (i.e.,
--- an ExampleLang AST root is a "modes" production).
+-- where "lang" is the top-level production (i.e.,
+-- an ExampleLang AST root is a "lang" production).
 --
 -- This parser does not parse noops, which are used
 -- internally by the interpreter. (Noops could be
@@ -51,7 +52,7 @@ lexeme = L.lexeme sc
 -- either a String error message or an ExampleLang AST.
 parseExampleLang :: Text -> IO (Either String ExampleLang)
 parseExampleLang str = do
-  case parse parseModes "" str of
+  case parse (choice [parseModes, parseELTerm]) "" str of
     Left bundle -> return $ Left (errorBundlePretty bundle)
     Right ast   -> return $ Right ast
 
@@ -76,6 +77,9 @@ parseTermLhs = choice
   , try $ L.symbol sc "turnLeft"  >> return TurnLeft
   , try $ L.symbol sc "turnRight" >> return TurnRight
   ]
+
+parseELTerm :: Parser ExampleLang
+parseELTerm = parseTerm >>= return . Term
 
 parseTerm :: Parser ELTerm
 parseTerm = choice
