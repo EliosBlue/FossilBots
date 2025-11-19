@@ -1,5 +1,4 @@
--- A bot controller which operates by running an
---  ExampleLang program.
+-- A bot controller which operates by running an ExampleLang program.
 
 module Controller
   ( ELController
