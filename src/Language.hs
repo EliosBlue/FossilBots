@@ -1,6 +1,7 @@
 -- Defines the AST for an example language called ExampleLang.
 --
--- The grammer of ExampleLang is as follows:
+-- The grammar of ExampleLang is as follows:
+--
 --   modes ::= mode name { term }
 --           | modes*
 --   term  ::= forever { term }
