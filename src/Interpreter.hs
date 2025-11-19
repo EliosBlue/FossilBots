@@ -1,11 +1,55 @@
 -- The ExampleLang interpreter.
+--
+-- Semantics are defined in terms of a step relation -> that
+-- relates <term, state> pairs:
+--
+--   <term, state> -> <term', state'>
+--
+-- A small-step operational semantics of ExampleLang is given
+-- by the following evaluation rules:
+--
+--  ------------------------------------------ ExlModeSingle
+--   <mode name {t}, s> -> <t, s[cmd := idle]>
+--
+--
+--  --------------------------------------------- ExlModeL
+--   <mode name {t} m, s> -> <t, s[cmd := idle]>
+--
+--
+--  --------------------------------------------- ExlModeR
+--   <mode name {t} m, s> -> <m, s[cmd := idle]>
+--
+--
+--  --------------------------------------------- ExlMode2
+--   <mode name {t} m, s> -> <t, s[cmd := idle]>
+--
+--
+--  ------------------------------------------------------ ExlForever
+--   <forever {t}, s> -> <t; forever {t}, s[cmd := idle]>
+--
+--
+--  ----------------------------------------------- ExlTurnLeft
+--   <turnLeft, s> -> <noop, s[cmd := turnLeft]>
+--
+--
+--  ------------------------------------------------ ExlTurnRight
+--   <turnRight, s> -> <noop, s[cmd := turnRight]>
+--
+--
+--         <t1, s> -> <t1', s'>      t1 /= noop
+--  ------------------------------------------------ ExlSeqL
+--             <t1; t2, s> -> <t1'; t2, s'>
+--
+--
+--         <t2, s> -> <t2', s'>      t1 = noop
+--  ------------------------------------------------ ExlSeqL
+--             <t1; t2, s> -> <t2', s'>
 
 module Interpreter
-  ( ELController
-  , mkELController
+  ( Interpreter(..)
+  ,  evalEL
   ) where
 
-import           Fryxbots.Bot.Controller
 import qualified Fryxbots.Bot.Command as Cmd
 import           Fryxbots.Bot.State
 import           Language (ExampleLang, ELTerm)
@@ -14,11 +58,15 @@ import           System.Random
 
 data Interpreter = Interpreter { stdGen :: StdGen }
 
+-- Evaluate a top-level ExampleLang AST.
 evalEL :: StdGen -> ExampleLang -> State -> (StdGen, ExampleLang, State)
 evalEL stdGen expr state =
   case expr of
     Lang.Modes [] -> (stdGen, expr, state)
     Lang.Modes modes ->
+      -- The semantics of ExampleLang doesn't specify a distribution of
+      -- mode selection, it just allows implementors to step to any mode.
+      -- We will randomly select a mode with a uniform distribution.
       let len = length modes
           (index, stdGen') = randomR (0, len - 1) stdGen :: (Int, StdGen)
           term = snd $ modes !! index
@@ -28,6 +76,7 @@ evalEL stdGen expr state =
       let (term', state') = evalTerm term state
       in (stdGen, Lang.Term term', state')
 
+-- Evaluate an ExampleLang Term.
 evalTerm :: ELTerm -> State -> (ELTerm, State)
 evalTerm term state =
   case term of
@@ -39,29 +88,3 @@ evalTerm term state =
                          in if term' == Lang.Noop
                             then (rhs, state')
                             else (term', state')
-
-
-data ELController = ELController
-  { interpreter :: Interpreter
-  , currentExpr :: ExampleLang
-  }
-
-mkELController :: ExampleLang -> ELController
-mkELController expr = ELController
-  { interpreter = Interpreter { stdGen = mkStdGen 0 }
-  , currentExpr = expr
-  }
-
-instance Controller ELController where
-
-  initialize cont botId _ =
-    let interp' = (interpreter cont) { stdGen = mkStdGen botId }
-    in cont { interpreter = interp' }
-
-  stepBot cont _ _ _ state =
-      let expr = currentExpr cont
-          gen = stdGen . interpreter $ cont
-          (gen', expr', state') = evalEL gen expr state
-          interp' = (interpreter cont) { stdGen = gen' }
-          cont' = cont { interpreter = interp', currentExpr = expr' }
-      in (cont', state')

@@ -2,29 +2,53 @@
 
 -- Uses Megaparsec to parse ExampleLang terms.
 --
--- Grammar:
+-- The ExampleLang grammar:
 --   modes ::= mode name { term }
 --           | modes*
 --   term  ::= forever { term }
 --           | turnLeft
 --           | turnRight
 --           | term; term
+--           | noop
 --
 -- where "modes" is the top-level production (i.e.,
 -- an ExampleLang AST root is a "modes" production).
+--
+-- This parser does not parse noops, which are used
+-- internally by the interpreter. (Noops could be
+-- added to the parsed language later if needed.)
 
 module Parser
   ( parseExampleLang
   ) where
 
-import Data.Text(Text)
-import Data.Void
-import Language
-import Text.Megaparsec
-import Text.Megaparsec.Char
+import           Data.Text(Text)
+import           Data.Void
+import           Language
+import           Text.Megaparsec
+import           Text.Megaparsec.Char
+import qualified Text.Megaparsec.Char.Lexer as L
 
 type Parser = Parsec Void Text
 
+-- I am using Megaparsec's Lexer package here to
+-- consume whitespace and comments. If you don't
+-- want to do things this way, you can consume
+-- whitespace as we did in the Megaparsec lab.
+
+sc :: Parser ()  -- sc = "space consumer"
+sc = L.space
+  space1
+  (L.skipLineComment "//")
+  (L.skipBlockComment "/*" "*/")
+
+-- This function wraps a parser into one that
+-- consumes trailing whitespace and comments.
+lexeme :: Parser a -> Parser a
+lexeme = L.lexeme sc
+
+-- The main entry point to the parser. Returns a sum type,
+-- either a String error message or an ExampleLang AST.
 parseExampleLang :: Text -> IO (Either String ExampleLang)
 parseExampleLang str = do
   case parse parseModes "" str of
@@ -38,21 +62,19 @@ parseModes = do
 
 parseMode :: Parser (String, ELTerm)
 parseMode = do
-  space
-  _ <- string "mode"
-  space
-  name <- some alphaNumChar
-  space
-  body <- between (space >> char '{')
-                  (space >> char '}')
+  sc
+  _ <- L.symbol sc "mode"
+  name <- lexeme $ some alphaNumChar
+  body <- between (lexeme $ char '{')
+                  (lexeme $ char '}')
                   parseTerm
   return $ (name, body)
 
 parseTermLhs :: Parser ELTerm
 parseTermLhs = choice
   [ try parseForever
-  , try $ space >> string "turnLeft"  >> return TurnLeft
-  , try $ space >> string "turnRight" >> return TurnRight
+  , try $ L.symbol sc "turnLeft"  >> return TurnLeft
+  , try $ L.symbol sc "turnRight" >> return TurnRight
   ]
 
 parseTerm :: Parser ELTerm
@@ -63,19 +85,15 @@ parseTerm = choice
 
 parseSeq :: Parser ELTerm
 parseSeq = do
-  space
   lhs <- parseTermLhs
-  space
-  _ <- char ';'
-  space
+  _ <- lexeme $ char ';'
   rhs <- parseTerm
   return $ Seq lhs rhs
 
 parseForever :: Parser ELTerm
 parseForever = do
-  space
-  _ <- string "forever"
-  body <- between (space >> char '{')
-                  (space >> char '}')
+  _ <- L.symbol sc "forever"
+  body <- between (lexeme $ char '{')
+                  (lexeme $ char '}')
                   parseTerm
   return $ Forever body

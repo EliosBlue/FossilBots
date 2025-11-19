@@ -1,4 +1,13 @@
 -- Defines the AST for an example language called ExampleLang.
+--
+-- The grammer of ExampleLang is as follows:
+--   modes ::= mode name { term }
+--           | modes*
+--   term  ::= forever { term }
+--           | turnLeft
+--           | turnRight
+--           | term; term
+--           | noop
 
 module Language
   ( ExampleLang(..) -- The (..) means "also export all constructors".

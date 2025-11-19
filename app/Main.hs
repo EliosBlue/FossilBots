@@ -3,16 +3,19 @@ module Main (main) where
 import Data.Text (pack)
 import Fryxbots.Example.RandomController
 import Fryxbots.Simulator
-import Interpreter
+import Controller
 import Language
 import Parser
+
+-- Loads programs, creates bot controllers, and runs
+-- the simulator.
 
 main :: IO ()
 main = do
   blueProgram <- parseProgram "programs/spinbot.exl"
   let blueController = mkELController blueProgram
   let goldController = mkRandomController
-  runSimulator blueController goldController
+  runSimulator "worlds/example1.world" blueController goldController
 
 parseProgram :: String -> IO ExampleLang
 parseProgram path = do
