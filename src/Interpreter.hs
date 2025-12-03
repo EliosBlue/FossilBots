@@ -8,7 +8,7 @@
 -- A small-step operational semantics of ExampleLang is given
 -- by the following evaluation rules:
 --
---  ------------------------------------------ ExlModeSingle
+--  ------------------------------------------- ExlModeSingle
 --   <mode name {t}, s> -> <t, s[cmd := idle]>
 --
 --
@@ -20,16 +20,32 @@
 --   <mode name {t} m, s> -> <m, s[cmd := idle]>
 --
 --
---  ------------------------------------------------------ ExlForever
---   <forever {t}, s> -> <t; forever {t}, s[cmd := idle]>
---
---
 --  ----------------------------------------------- ExlTurnLeft
 --   <turnLeft, s> -> <noop, s[cmd := RotateLeft]>
 --
 --
 --  ------------------------------------------------ ExlTurnRight
 --   <turnRight, s> -> <noop, s[cmd := turnRight]>
+--
+--
+--  --------------------------------------------------- ExlMoveForward
+--   <moveForward, s> -> <noop, s[cmd := moveForward]>
+--
+--
+--  ----------------------------------------------------------------------- ExlDropBeacon
+--   <dropBeacon BeaconKind, s> -> <noop, s[cmd := dropBeacon BeaconKind]>
+--
+--
+--  ------------------------------------------------------- ExlDestroyBeacon
+--   <destroyBeacon, s> -> <noop, s[cmd := destroyBeacon]>
+--
+--
+--  ----------------------------------------------------- ExlPickUpFossil
+--   <pickUpFossil, s> -> <noop, s[cmd := pickUpFossil]>
+--
+--
+--  ------------------------------------------------- ExlDropFossil
+--   <dropFossil, s> -> <noop, s[cmd := dropFossil]>
 --
 --
 --         <t1, s> -> <t1', s'>      t1 /= noop
@@ -43,19 +59,19 @@
 
 module Interpreter
   ( Interpreter(..)
-  ,  evalEL
+  ,  evalBL
   ) where
 
 import qualified Fryxbots.Bot.Command as Cmd
 import           Fryxbots.Bot.State
-import           Language (ExampleLang, ELTerm)
+import           Language (BotLang, BLTerm)
 import qualified Language as Lang
 import           System.Random
 
 data Interpreter = Interpreter { stdGen :: StdGen }
 
 -- Evaluate a top-level ExampleLang AST.
-evalEL :: StdGen -> ExampleLang -> State -> (StdGen, ExampleLang, State)
+evalEL :: StdGen -> BotLang -> State -> (StdGen, BotLang, State)
 evalEL stdGen expr state =
   case expr of
     Lang.Modes [] -> (stdGen, expr, state)
@@ -73,13 +89,16 @@ evalEL stdGen expr state =
       in (stdGen, Lang.Term term', state')
 
 -- Evaluate an ExampleLang Term.
-evalTerm :: ELTerm -> State -> (ELTerm, State)
+evalTerm :: BLTerm -> State -> (BLTerm, State)
 evalTerm term state =
   case term of
-    Lang.Forever body -> ( Lang.Seq body term
-                         , setCommand Cmd.Idle state )
     Lang.TurnLeft  -> (Lang.Noop, setCommand Cmd.RotateLeft state)
     Lang.TurnRight -> (Lang.Noop, setCommand Cmd.RotateRight state)
+    Lang.MoveForward -> (Lang.Noop, setCommand Cmd.MoveForward state)
+    Lang.DropBeacon BeaconKind -> (Lang.Noop, setCommand Cmd.DropBeacon BeaconKind state)
+    Lang.DestroyBeacon -> (Lang.Noop, setCommand Cmd.DestroyBeacon state)
+    Lang.PickUpFossil -> (Lang.Noop, setCommand Cmd.PickUpFossil state)
+    Lang.DropFossil -> (Lang.Noop, setCommand Cmd.DropFossil)
     Lang.Seq lhs rhs -> let (termLhs', stateLhs') = evalTerm lhs state
                             (termRhs', stateRhs') = evalTerm rhs state
                         in if lhs == Lang.Noop

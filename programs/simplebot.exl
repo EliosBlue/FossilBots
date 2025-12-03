@@ -1,0 +1,16 @@
+/*
+ * A program written in BotLang that makes
+ * bots move in boxes and other small tasks
+ */
+
+mode moveBoxRight {
+  moveForward ; turnRight ; moveForward ; turnRight ; moveForward ; turnRight ; moveForward
+}
+
+mode moveBoxLeft {
+  moveForward ; turnLeft ; moveForward ; turnLeft ; moveForward ; turnLeft ; moveForward
+}
+
+mode celebrate {
+  turnLeft ; turnRight ; turnLeft ; turnRight
+}

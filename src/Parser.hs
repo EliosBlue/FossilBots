@@ -1,26 +1,30 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- Uses Megaparsec to parse ExampleLang terms.
+-- Uses Megaparsec to parse BotLang terms.
 --
--- The ExampleLang grammar:
+-- The BotLang grammar:
 --   lang  ::= modes | term
 --   modes ::= mode name { term }
---           | modes*
---   term  ::= forever { term }
---           | turnLeft
+--           | modes modes
+--   term  ::= turnLeft
 --           | turnRight
+--           | moveForward
+--           | dropBeacon beaconKind
+--           | destroyBeacon
+--           | pickUpFossil
+--           | dropFossil
 --           | term; term
 --           | noop
 --
 -- where "lang" is the top-level production (i.e.,
--- an ExampleLang AST root is a "lang" production).
+-- an BotLang AST root is a "lang" production).
 --
 -- This parser does not parse noops, which are used
 -- internally by the interpreter. (Noops could be
 -- added to the parsed language later if needed.)
 
 module Parser
-  ( parseExampleLang
+  ( parseBotLang
   ) where
 
 import           Data.Text(Text)
@@ -49,19 +53,19 @@ lexeme :: Parser a -> Parser a
 lexeme = L.lexeme sc
 
 -- The main entry point to the parser. Returns a sum type,
--- either a String error message or an ExampleLang AST.
-parseExampleLang :: Text -> IO (Either String ExampleLang)
+-- either a String error message or an BotLang AST.
+parseExampleLang :: Text -> IO (Either String BotLang)
 parseExampleLang str = do
   case parse (choice [parseModes, parseELTerm]) "" str of
     Left bundle -> return $ Left (errorBundlePretty bundle)
     Right ast   -> return $ Right ast
 
-parseModes :: Parser ExampleLang
+parseModes :: Parser BotLang
 parseModes = do
   modes <- some parseMode
   return $ Modes modes
 
-parseMode :: Parser (String, ELTerm)
+parseMode :: Parser (String, BLTerm)
 parseMode = do
   sc
   _ <- L.symbol sc "mode"
@@ -71,33 +75,37 @@ parseMode = do
                   parseTerm
   return $ (name, body)
 
-parseTermLhs :: Parser ELTerm
+parseTermLhs :: Parser BLTerm
 parseTermLhs = choice
-  [ try parseForever
-  , try $ L.symbol sc "turnLeft"  >> return TurnLeft
+  [ try $ L.symbol sc "turnLeft"  >> return TurnLeft
   , try $ L.symbol sc "turnRight" >> return TurnRight
+  , try $ L.symbol sc "moveForward" >> return MoveForward
+  , try $ L.symbol sc "dropBeacon" >> return DropBeacon beaconKind
+  , try $ L.symbol sc "turnRight" >> return DestroyBeacon
+  , try $ L.symbol sc "turnRight" >> return PickUpFossil
+  , try $ L.symbol sc "turnRight" >> return DropFossil
   ]
 
-parseELTerm :: Parser ExampleLang
-parseELTerm = parseTerm >>= return . Term
+parseBLTerm :: Parser BotLang
+parseBLTerm = parseTerm >>= return . Term
 
-parseTerm :: Parser ELTerm
+parseTerm :: Parser BLTerm
 parseTerm = choice
   [ try parseSeq
   , parseTermLhs
   ]
 
-parseSeq :: Parser ELTerm
+parseSeq :: Parser BLTerm
 parseSeq = do
   lhs <- parseTermLhs
   _ <- lexeme $ char ';'
   rhs <- parseTerm
   return $ Seq lhs rhs
 
-parseForever :: Parser ELTerm
+{- parseForever :: Parser BLTerm
 parseForever = do
   _ <- L.symbol sc "forever"
   body <- between (lexeme $ char '{')
                   (lexeme $ char '}')
                   parseTerm
-  return $ Forever body
+  return $ Forever body -}

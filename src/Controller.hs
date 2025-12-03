@@ -1,8 +1,8 @@
--- A bot controller which operates by running an ExampleLang program.
+-- A bot controller which operates by running an BotLang program.
 
 module Controller
-  ( ELController
-  , mkELController
+  ( BLController
+  , mkBLController
   ) where
 
 import Fryxbots.Bot.Controller
@@ -11,14 +11,14 @@ import Interpreter
 import Language
 import System.Random
 
-data ELController = ELController
+data BLController = BLController
   { interpreter :: Interpreter
-  , program :: ExampleLang
+  , program :: BotLang
   , team :: Team
   }
 
-mkELController :: ExampleLang -> ELController
-mkELController prog = ELController
+mkBLController :: BotLang -> BLController
+mkBLController prog = BLController
   { interpreter = Interpreter { stdGen = mkStdGen 0 }
   , program = prog
   , team = Blue
@@ -27,7 +27,7 @@ mkELController prog = ELController
 --
 -- The Fryxbot controller for ExampleLang programs.
 --
-instance Controller ELController where
+instance Controller BLController where
 
   -- Initializing a controller seeds a new random generator
   -- in the interpreter.
@@ -36,7 +36,7 @@ instance Controller ELController where
     in cont { interpreter = interp', team = botTeam }
 
   -- Stepping a bot to a new state works by:
-  --   1. Passing the controller's program to the ExampleLang interpreter
+  --   1. Passing the controller's program to the BotLang interpreter
   --   2. Updating the controller with the program the evaluator stepped to
   --   3. Updating the random number generator in the interpreter
   --   4. Returning the updated controller and the newly evaluated state
