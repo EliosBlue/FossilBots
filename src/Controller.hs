@@ -11,6 +11,7 @@ import Interpreter
 import Language
 import System.Random
 
+
 data BLController = BLController
   { interpreter :: Interpreter
   , program :: BotLang

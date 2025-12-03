@@ -95,7 +95,7 @@ evalTerm term state =
     Lang.TurnLeft  -> (Lang.Noop, setCommand Cmd.RotateLeft state)
     Lang.TurnRight -> (Lang.Noop, setCommand Cmd.RotateRight state)
     Lang.MoveForward -> (Lang.Noop, setCommand Cmd.MoveForward state)
-    Lang.DropBeacon BeaconKind -> (Lang.Noop, setCommand Cmd.DropBeacon BeaconKind state)
+    Lang.DropBeacon Beacon -> (Lang.Noop, setCommand Cmd.DropBeacon Beacon state)
     Lang.DestroyBeacon -> (Lang.Noop, setCommand Cmd.DestroyBeacon state)
     Lang.PickUpFossil -> (Lang.Noop, setCommand Cmd.PickUpFossil state)
     Lang.DropFossil -> (Lang.Noop, setCommand Cmd.DropFossil)

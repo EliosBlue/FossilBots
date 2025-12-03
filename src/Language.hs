@@ -12,13 +12,14 @@
 --           | destroyBeacon
 --           | pickUpFossil
 --           | dropFossil
+--           | if term term term
 --           | term; term
 --           | noop
 
 module Language
-  ( BotLang(..) -- The (..) means "also export all constructors".
-  , BLTerm(..)
-  ) where
+	( BotLang(..) -- The (..) means "also export all constructors".
+	, BLTerm(..)
+	) where
 
 -- For efficiency, we represent productions of the mode grammar:
 --
@@ -34,10 +35,13 @@ data BotLang = Modes [(String, ELTerm)]
 data BLTerm = TurnLeft
             | TurnRight
             | MoveForward
-            | DropBeacon BeaconKind
+            | DropBeacon String
             | DestroyBeacon
             | PickUpFossil
             | DropFossil
+            | Cond BLTerm BLTerm BLTerm
             | Seq BLTerm BLTerm
+			| IsZero Int
+			| Bool Bool
             | Noop
             deriving (Eq, Ord, Show)

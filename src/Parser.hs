@@ -54,9 +54,9 @@ lexeme = L.lexeme sc
 
 -- The main entry point to the parser. Returns a sum type,
 -- either a String error message or an BotLang AST.
-parseExampleLang :: Text -> IO (Either String BotLang)
-parseExampleLang str = do
-  case parse (choice [parseModes, parseELTerm]) "" str of
+parseBotLang :: Text -> IO (Either String BotLang)
+parseBotLang str = do
+  case parse (choice [parseModes, parseBLTerm]) "" str of
     Left bundle -> return $ Left (errorBundlePretty bundle)
     Right ast   -> return $ Right ast
 
@@ -80,10 +80,10 @@ parseTermLhs = choice
   [ try $ L.symbol sc "turnLeft"  >> return TurnLeft
   , try $ L.symbol sc "turnRight" >> return TurnRight
   , try $ L.symbol sc "moveForward" >> return MoveForward
-  , try $ L.symbol sc "dropBeacon" >> return DropBeacon beaconKind
-  , try $ L.symbol sc "turnRight" >> return DestroyBeacon
-  , try $ L.symbol sc "turnRight" >> return PickUpFossil
-  , try $ L.symbol sc "turnRight" >> return DropFossil
+  , try $ L.symbol sc "dropBeacon" BeaconKind >> return DropBeacon 
+  , try $ L.symbol sc "drestroyBeacon" >> return DestroyBeacon
+  , try $ L.symbol sc "pickUpFossil" >> return PickUpFossil
+  , try $ L.symbol sc "dropFossil" >> return DropFossil
   ]
 
 parseBLTerm :: Parser BotLang
