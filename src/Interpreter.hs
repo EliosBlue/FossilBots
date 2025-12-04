@@ -99,8 +99,12 @@ evalTerm term state =
     Lang.DestroyBeacon -> (Lang.Noop, setCommand Cmd.DestroyBeacon state)
     Lang.PickUpFossil -> (Lang.Noop, setCommand Cmd.PickUpFossil state)
     Lang.DropFossil -> (Lang.Noop, setCommand Cmd.DropFossil)
+    Lang.Cond ifTerm thTerm ElTerm -> (if evalTerm ifTerm state == 
+      (Lang.Noop, Lang.Bool True) then evalTerm thTerm state else evalTerm ElTerm state)
     Lang.Seq lhs rhs -> let (termLhs', stateLhs') = evalTerm lhs state
                             (termRhs', stateRhs') = evalTerm rhs state
                         in if lhs == Lang.Noop
                            then (termRhs', stateRhs')
                            else (Lang.Seq termLhs' rhs, stateLhs')
+    Lang.IsZero numFossils -> (if numFossils == 0 then (Lang.Noop, Lang.Bool True) else (Lang.Noop, Lang.Bool False))
+    Lang.Bool bool -> (Lang.Noop, Lang.Bool bool)
