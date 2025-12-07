@@ -44,7 +44,7 @@ instance Controller BLController where
   stepBot cont facing sensing hasFossil state =
       let prog = program cont
           gen = stdGen . interpreter $ cont
-          (gen', prog', state') = evalEL gen prog state
+          (gen', prog', state') = evalBL gen sensing prog state
           interp' = (interpreter cont) { stdGen = gen' }
           cont' = cont { interpreter = interp', program = prog' }
       in (cont', state')

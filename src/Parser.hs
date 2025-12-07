@@ -33,6 +33,7 @@ import           Language
 import           Text.Megaparsec
 import           Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
+import Fryxbots.Beacon 
 
 type Parser = Parsec Void Text
 
@@ -80,8 +81,8 @@ parseTermLhs = choice
   [ try $ L.symbol sc "turnLeft"  >> return TurnLeft
   , try $ L.symbol sc "turnRight" >> return TurnRight
   , try $ L.symbol sc "moveForward" >> return MoveForward
-  , try $ L.symbol sc "dropBeacon" BeaconKind >> return DropBeacon 
-  , try $ L.symbol sc "drestroyBeacon" >> return DestroyBeacon
+  , try $ L.symbol sc "dropBeacon" >> return (DropBeacon Kind1)
+  , try $ L.symbol sc "destroyBeacon" >> return DestroyBeacon
   , try $ L.symbol sc "pickUpFossil" >> return PickUpFossil
   , try $ L.symbol sc "dropFossil" >> return DropFossil
   ]
@@ -92,6 +93,7 @@ parseBLTerm = parseTerm >>= return . Term
 parseTerm :: Parser BLTerm
 parseTerm = choice
   [ try parseSeq
+  , try parseFossilCond
   , parseTermLhs
   ]
 
@@ -101,6 +103,13 @@ parseSeq = do
   _ <- lexeme $ char ';'
   rhs <- parseTerm
   return $ Seq lhs rhs
+
+parseFossilCond :: Parser BLTerm
+parseFossilCond = do
+  _ <- L.symbol sc "if"
+  th <- parseTerm
+  el <- parseTerm
+  return $ FossilCond th el
 
 {- parseForever :: Parser BLTerm
 parseForever = do

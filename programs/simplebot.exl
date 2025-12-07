@@ -16,5 +16,5 @@ mode celebrate {
 }
 
 mode fossilCheck {
-  if */not sure how to get number of fossils, not clear in thr fryxbot files*/ isZero numOfFossils then moveForward else pickUpFossil
+   if pickUpFossil moveForward
 }

@@ -38,7 +38,7 @@ packages:
 #
 extra-deps:
 - github: rcdickerson/fryxbots
-  commit: c9f3cf885d1a28246a9140818effc44e0b2d51d7
+  commit: 757a0218feda00d583c8f38a9f821842f7f73250
 
 
 # Override default flag values for project packages and extra-deps

@@ -28,6 +28,7 @@ library
       Interpreter
       Language
       Parser
+      TypeChecker
   other-modules:
       Paths_fryxbot_submission
   autogen-modules:

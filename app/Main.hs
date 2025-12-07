@@ -12,15 +12,15 @@ import Parser
 
 main :: IO ()
 main = do
-  blueProgram <- parseProgram "programs/spinbot.exl"
-  let blueController = mkELController blueProgram
+  blueProgram <- parseProgram "programs/simplebot.exl"
+  let blueController = mkBLController blueProgram
   let goldController = mkRandomController
   runSimulator "worlds/example1.world" blueController goldController
 
-parseProgram :: String -> IO ExampleLang
+parseProgram :: String -> IO BotLang
 parseProgram path = do
   programStr <- readFile path
-  parse <- parseExampleLang $ pack programStr
+  parse <- parseBotLang $ pack programStr
   case parse of
       Left err -> error err
       Right ast -> return ast

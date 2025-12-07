@@ -67,12 +67,13 @@ import           Fryxbots.Bot.State
 import           Language (BotLang, BLTerm)
 import qualified Language as Lang
 import           System.Random
+import           Fryxbots.Bot.Sensing
 
 data Interpreter = Interpreter { stdGen :: StdGen }
 
 -- Evaluate a top-level ExampleLang AST.
-evalEL :: StdGen -> BotLang -> State -> (StdGen, BotLang, State)
-evalEL stdGen expr state =
+evalBL :: StdGen -> Sensing -> BotLang -> State -> (StdGen, BotLang, State)
+evalBL stdGen sense expr state =
   case expr of
     Lang.Modes [] -> (stdGen, expr, state)
     Lang.Modes modes ->
@@ -85,26 +86,26 @@ evalEL stdGen expr state =
           state' = setCommand Cmd.Idle state
       in (stdGen', Lang.Term term, state')
     Lang.Term term ->
-      let (term', state') = evalTerm term state
+      let (term', state') = evalTerm term sense state
       in (stdGen, Lang.Term term', state')
 
 -- Evaluate an ExampleLang Term.
-evalTerm :: BLTerm -> State -> (BLTerm, State)
-evalTerm term state =
+evalTerm :: BLTerm -> Sensing -> State -> (BLTerm, State)
+evalTerm term sense state =
   case term of
     Lang.TurnLeft  -> (Lang.Noop, setCommand Cmd.RotateLeft state)
     Lang.TurnRight -> (Lang.Noop, setCommand Cmd.RotateRight state)
     Lang.MoveForward -> (Lang.Noop, setCommand Cmd.MoveForward state)
-    Lang.DropBeacon Beacon -> (Lang.Noop, setCommand Cmd.DropBeacon Beacon state)
+    Lang.DropBeacon beacon -> (Lang.Noop, setCommand (Cmd.DropBeacon beacon) state)
     Lang.DestroyBeacon -> (Lang.Noop, setCommand Cmd.DestroyBeacon state)
     Lang.PickUpFossil -> (Lang.Noop, setCommand Cmd.PickUpFossil state)
-    Lang.DropFossil -> (Lang.Noop, setCommand Cmd.DropFossil)
-    Lang.Cond ifTerm thTerm ElTerm -> (if evalTerm ifTerm state == 
-      (Lang.Noop, Lang.Bool True) then evalTerm thTerm state else evalTerm ElTerm state)
-    Lang.Seq lhs rhs -> let (termLhs', stateLhs') = evalTerm lhs state
-                            (termRhs', stateRhs') = evalTerm rhs state
-                        in if lhs == Lang.Noop
-                           then (termRhs', stateRhs')
-                           else (Lang.Seq termLhs' rhs, stateLhs')
-    Lang.IsZero numFossils -> (if numFossils == 0 then (Lang.Noop, Lang.Bool True) else (Lang.Noop, Lang.Bool False))
-    Lang.Bool bool -> (Lang.Noop, Lang.Bool bool)
+    Lang.DropFossil -> (Lang.Noop, setCommand Cmd.DropFossil state)
+    Lang.FossilCond thTerm elTerm -> (if numFossils (current sense) > 0 
+                                then (evalTerm thTerm sense state) 
+                                else (evalTerm elTerm sense state))
+    Lang.Seq lhs rhs -> if lhs == Lang.Noop
+                           then evalTerm rhs sense state
+                           else
+                            let (termLhs', stateLhs') = evalTerm lhs sense state
+                            in (Lang.Seq termLhs' rhs, stateLhs')
+    Lang.Noop -> (Lang.Noop, state)

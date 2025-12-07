@@ -12,8 +12,8 @@
 --           | destroyBeacon
 --           | pickUpFossil
 --           | dropFossil
---           | if term term term
---           | term; term
+--           | fossilCond term term
+--           | term; terms
 --           | noop
 
 module Language
@@ -21,6 +21,7 @@ module Language
 	, BLTerm(..)
 	) where
 
+import Fryxbots.Beacon
 -- For efficiency, we represent productions of the mode grammar:
 --
 --   modes ::= mode string { term }
@@ -28,20 +29,18 @@ module Language
 --
 -- as a list of (string, term) pairs.
 
-data BotLang = Modes [(String, ELTerm)]
+data BotLang = Modes [(String, BLTerm)]
                  | Term BLTerm
                  deriving (Eq, Ord, Show)
 
 data BLTerm = TurnLeft
             | TurnRight
             | MoveForward
-            | DropBeacon String
+            | DropBeacon BeaconKind
             | DestroyBeacon
             | PickUpFossil
             | DropFossil
-            | Cond BLTerm BLTerm BLTerm
+            | FossilCond BLTerm BLTerm
             | Seq BLTerm BLTerm
-			| IsZero Int
-			| Bool Bool
             | Noop
             deriving (Eq, Ord, Show)

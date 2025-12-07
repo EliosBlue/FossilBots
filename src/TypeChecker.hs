@@ -8,6 +8,6 @@ data Types =
     | TCommand
 
 instance Show Types where
-    show (TArrow t1 t1) = "(" ++ show t1 ++ " -> " ++ show t2 ++ ")"
+    show (TArrow t1 t2) = "(" ++ show t1 ++ " -> " ++ show t2 ++ ")"
     show TBool = "bool"
     show TCommand = "command"
