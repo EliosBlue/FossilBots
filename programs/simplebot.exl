@@ -1,3 +1,4 @@
+//old simple code - doesn't work right with this version
 mode moveBoxRight {
   moveForward ; turnRight ; moveForward ; turnRight ; moveForward ; turnRight ; moveForward
 }
