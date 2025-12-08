@@ -13,7 +13,7 @@ import Parser
 
 main :: IO ()
 main = do
-  blueProgram <- parseProgram "programs/workerBots.bxl"
+  blueProgram <- parseProgram "programs/workerBots.exl"
   let goldController = mkRandomController
   case mkBLController blueProgram of
     Left err -> putStrLn $ "Type error in program: " ++ err
