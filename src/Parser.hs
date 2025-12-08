@@ -37,11 +37,6 @@ import Fryxbots.Beacon
 
 type Parser = Parsec Void Text
 
--- I am using Megaparsec's Lexer package here to
--- consume whitespace and comments. If you don't
--- want to do things this way, you can consume
--- whitespace as we did in the Megaparsec lab.
-
 sc :: Parser ()  -- sc = "space consumer"
 sc = L.space
   space1
@@ -81,10 +76,25 @@ parseTermLhs = choice
   [ try $ L.symbol sc "turnLeft"  >> return TurnLeft
   , try $ L.symbol sc "turnRight" >> return TurnRight
   , try $ L.symbol sc "moveForward" >> return MoveForward
-  , try $ L.symbol sc "dropBeacon" >> return (DropBeacon Kind1)
+  , try $ do
+        _ <- L.symbol sc "dropBeacon" 
+        kindstr <- lexeme $ some alphaNumChar
+        let kind = case kindstr of
+                    "kind1" -> Kind1
+                    "kind2" -> Kind2
+                    "Kind3" -> Kind3
+                    "Kind4" -> Kind4
+                    "Kind5" -> Kind5
+                    "Kind6" -> Kind6
+                    _ -> Kind1
+        return (DropBeacon kind)
   , try $ L.symbol sc "destroyBeacon" >> return DestroyBeacon
   , try $ L.symbol sc "pickUpFossil" >> return PickUpFossil
   , try $ L.symbol sc "dropFossil" >> return DropFossil
+  , try $ between (lexeme $ char '(') (lexeme $ char ')') parseTerm
+  , try $ do
+      name <- lexeme $ some alphaNumChar
+      return (CallMode name)
   ]
 
 parseBLTerm :: Parser BotLang
@@ -92,29 +102,133 @@ parseBLTerm = parseTerm >>= return . Term
 
 parseTerm :: Parser BLTerm
 parseTerm = choice
-  [ try parseSeq
+  [ try parseSeq <|> parseNonSeq
+  , try parseBaseCond
+  , try parseBaseDir
+  , try parseBeaconCond
+  , try parseBeaconDir
+  , try parseNearbyCond
+  , try parseFossilCond
+  , try parseFor
+  , try parseWhile
+  , try parseRepeatUntil
+  , try parseChoose
+  , parseTermLhs
+  ]
+
+parseNonSeq :: Parser BLTerm
+parseNonSeq = choice
+  [ try parseFor
+  , try parseWhile
+  , try parseRepeatUntil
+  , try parseChoose
+  , try parseBaseDir
+  , try parseBaseCond
+  , try parseBeaconDir
+  , try parseBeaconCond
+  , try parseNearbyCond
   , try parseFossilCond
   , parseTermLhs
   ]
 
 parseSeq :: Parser BLTerm
 parseSeq = do
-  lhs <- parseTermLhs
+  lhs <- parseNonSeq
+  _ <- optional sc
   _ <- lexeme $ char ';'
+  _ <- optional sc
   rhs <- parseTerm
   return $ Seq lhs rhs
 
 parseFossilCond :: Parser BLTerm
 parseFossilCond = do
-  _ <- L.symbol sc "if"
+  _ <- L.symbol sc "ifFossil"
   th <- parseTerm
   el <- parseTerm
   return $ FossilCond th el
 
-{- parseForever :: Parser BLTerm
-parseForever = do
-  _ <- L.symbol sc "forever"
+parseBaseCond :: Parser BLTerm
+parseBaseCond = do
+  _ <- L.symbol sc "ifBase"
+  th <- parseTerm
+  el <- parseTerm
+  return $ BaseCond th el
+
+parseBeaconCond :: Parser BLTerm
+parseBeaconCond = do
+  _ <- L.symbol sc "ifBeacon"
+  kindstr <- lexeme $ some alphaNumChar
+  let kind = case kindstr of
+              "kind1" -> Kind1
+              "kind2" -> Kind2
+              "Kind3" -> Kind3
+              "Kind4" -> Kind4
+              "Kind5" -> Kind5
+              "Kind6" -> Kind6
+              _ -> Kind1
+  th <- parseTerm
+  el <- parseTerm
+  return $ BeaconCond kind th el
+
+parseBeaconDir :: Parser BLTerm
+parseBeaconDir = do
+  _ <- L.symbol sc "ifBeaconDir"
+  kindstr <- lexeme $ some alphaNumChar
+  let kind = case kindstr of
+              "kind1" -> Kind1
+              "kind2" -> Kind2
+              "Kind3" -> Kind3
+              "Kind4" -> Kind4
+              "Kind5" -> Kind5
+              "Kind6" -> Kind6
+              _ -> Kind1
+  idx <- lexeme L.decimal
+  th <- parseTerm
+  el <- parseTerm
+  return $ IfBeaconDir kind idx th el
+
+parseNearbyCond :: Parser BLTerm
+parseNearbyCond = do
+  _ <- L.symbol sc "ifNearby"
+  th <- parseTerm
+  el <- parseTerm
+  return $ NearbyCond th el
+
+parseBaseDir :: Parser BLTerm
+parseBaseDir = do
+  _ <- L.symbol sc "ifBaseDir"
+  idx <- lexeme L.decimal
+  th <- parseTerm
+  el <- parseTerm
+  return $ IfBaseDir idx th el
+
+parseFor :: Parser BLTerm
+parseFor = do
+  _ <- L.symbol sc "for"
+  num <- lexeme L.decimal
   body <- between (lexeme $ char '{')
                   (lexeme $ char '}')
                   parseTerm
-  return $ Forever body -}
+  return $ For num body
+
+parseWhile :: Parser BLTerm
+parseWhile = do
+  _ <- L.symbol sc "while"
+  cond <- parseTerm
+  body <- between (lexeme $ char '{') (lexeme $ char '}') parseTerm
+  return $ While cond body
+
+parseRepeatUntil :: Parser BLTerm
+parseRepeatUntil = do
+  _ <- L.symbol sc "repeat"
+  body <- between (lexeme $ char '{') (lexeme $ char '}') parseTerm
+  _ <- L.symbol sc "until"
+  cond <- parseTerm
+  return $ RepeatUntil body cond
+
+parseChoose :: Parser BLTerm
+parseChoose = do
+  _ <- L.symbol sc "choose"
+  lhs <- between (lexeme $ char '{') (lexeme $ char '}') parseTerm
+  rhs <- between (lexeme $ char '{') (lexeme $ char '}') parseTerm
+  return $ Choose lhs rhs

@@ -1,8 +1,3 @@
-/*
- * A program written in BotLang that makes
- * bots move in boxes and other small tasks
- */
-
 mode moveBoxRight {
   moveForward ; turnRight ; moveForward ; turnRight ; moveForward ; turnRight ; moveForward
 }
@@ -16,5 +11,236 @@ mode celebrate {
 }
 
 mode fossilCheck {
-   if pickUpFossil moveForward
+  ifFossil pickUpFossil moveForward
 }
+
+
+
+/*
+ * FossilBot Wanderer Program
+ * 
+ * This program makes bots wander the world searching for fossils.
+ * When a fossil is found:
+ *   1. The bot picks up the fossil
+ *   2. Drops a beacon to mark the discovery location
+ *   3. Returns to base
+ *   4. Drops the fossil at base
+ *   5. Returns to wandering to find more fossils
+ */
+
+// ============================================================================
+// NAVIGATION MODES - Basic movement patterns
+// ============================================================================
+/*
+// Turn around (180 degrees = 3 turns for hexagonal)
+mode turnAround {
+  turnRight ; turnRight ; turnRight
+}
+
+// Helper modes: faceDirN perform N right-turns (relative rotation).
+// These are useful when a program picks a direction index (0..5)
+// and then wants a simple way to rotate that many steps before moving.
+/*
+mode faceDir0 {
+  noop
+}
+*/
+
+mode faceDir1 {
+  turnRight
+}
+
+mode faceDir2 {
+  turnRight ; turnRight
+}
+
+mode faceDir3 {
+  turnRight ; turnRight ; turnRight
+}
+
+mode faceDir4 {
+  turnRight ; turnRight ; turnRight ; turnRight
+}
+
+mode faceDir5 {
+  turnRight ; turnRight ; turnRight ; turnRight ; turnRight
+}
+
+// ============================================================================
+// WANDERING MODES - Search patterns for exploration
+// ============================================================================
+
+// Spiral wandering pattern - explores outward in hexagonal pattern
+
+mode spiralSearch {
+  for 6 {moveForward ;
+  turnLeft}
+}
+
+// Zigzag pattern - covers ground systematically in hexagonal grid
+mode zigzag {
+  for 6 {
+    for 3 {
+      moveForward} ;
+      turnLeft}
+}
+
+// Random walk - general exploration for hexagonal grid
+mode randomWalk1 {
+  moveForward ;
+  moveForward ;
+  turnLeft ;
+  moveForward ;
+  moveForward ;
+  moveForward
+}
+
+mode randomWalk2 {
+  moveForward ;
+  moveForward ;
+  moveForward ;
+  turnRight ;
+  moveForward ;
+  moveForward
+}
+
+mode randomWalk3 {
+  for 3 {moveForward} ;
+  turnLeft ;
+  moveForward ;
+  moveForward
+}
+
+// ============================================================================
+// BEACON MARKING - Mark fossil discovery locations
+// ============================================================================
+
+// Mark location with Kind1 beacon (discovery marker)
+mode markFossilFound {
+  dropBeacon kind1
+}
+
+// Mark location with Kind2 beacon (explored area)
+mode markExplored {
+  dropBeacon kind2
+}
+
+// Example: react to a beacon in the adjacent tile in a given direction index
+// Index is 0..5 corresponding to the six hex facings (see simulator Facing enum)
+// If there's a kind1 beacon in the checked direction, turn right; otherwise move
+mode avoidBeaconAhead {
+  ifBeaconDir kind1 0 turnRight moveForward
+}
+
+// Example: if base is adjacent in the checked direction then move towards it,
+// otherwise continue a random walk
+mode approachBaseIfAdjacent {
+  ifBaseDir 0 moveForward randomWalk1
+}
+
+// ============================================================================
+// FOSSIL COLLECTION - Handle fossil pickup and processing
+// ============================================================================
+
+// Collect a fossil from current location
+mode collectFossil {
+  pickUpFossil //;
+  //markFossilFound
+}
+
+// Check if there's a fossil and collect it, otherwise continue wandering
+mode checkAndCollect {
+  ifFossil collectFossil (choose { randomWalk1 } { randomWalk2 })
+}
+
+// ============================================================================
+// NAVIGATION TO BASE - Return fossil to base
+// ============================================================================
+
+// Move towards base (simplified - tries to get closer)
+mode moveTowardBase {
+  ifBase dropFossil moveForward
+}
+
+// Return to base with fossil - try multiple times
+mode returnToBase {
+  randomWalk2 ;
+  randomWalk2 ;
+  randomWalk1
+}
+
+// Drop fossil at base and prepare to leave
+mode depositFossil {
+  ifBase dropFossil moveForward
+}
+
+// ============================================================================
+// CORE WORKER LOGIC - Main behavior loop
+// ============================================================================
+
+// Single worker bot that searches for fossils continuously
+mode fossilWorker {
+  ifFossil pickUpFossil (choose { moveForward } { turnLeft }) ;
+  ifBase (ifFossil dropFossil moveForward) (choose { moveForward } { turnLeft })
+}
+
+// Worker variant that uses different search patterns
+mode fossilWorkerAlt {
+  for 10 {
+    checkAndCollect ;
+    returnToBase ;
+    zigzag ;
+    randomWalk3
+  }
+}
+
+// ============================================================================
+// EXTENDED BEHAVIOR - Multiple bots working together
+// ============================================================================
+
+// Collector bot - focuses on finding and returning fossils
+mode collector {
+  turnRight ;
+  for 50 {
+    checkAndCollect ;
+    ifBase depositFossil randomWalk1 ;
+    spiralSearch
+  }
+}
+
+// Scout bot - explores with different pattern
+mode scout {
+  turnLeft ;
+  for 50 {
+    checkAndCollect ;
+    returnToBase ;
+    zigzag ;
+    randomWalk2
+  }
+}
+
+// Guard bot - stays near base and processes returns
+mode guard {
+  //markExplored ;
+  for 50 {
+    ifBase dropFossil moveForward ;
+    moveForward ;
+    moveForward ;
+    turnAround
+  }
+}
+
+// ============================================================================
+// MAIN ENTRY POINT
+// ============================================================================
+
+// Simple single bot version
+mode main {
+  fossilWorker
+}
+
+// Multi-bot coordination (uncomment to use)
+// mode main {
+//   collector ; scout ; guard
+// }
+*/

@@ -33,7 +33,8 @@ data BotLang = Modes [(String, BLTerm)]
                  | Term BLTerm
                  deriving (Eq, Ord, Show)
 
-data BLTerm = TurnLeft
+data BLTerm = CallMode String
+			| TurnLeft
             | TurnRight
             | MoveForward
             | DropBeacon BeaconKind
@@ -41,6 +42,15 @@ data BLTerm = TurnLeft
             | PickUpFossil
             | DropFossil
             | FossilCond BLTerm BLTerm
+			| BaseCond BLTerm BLTerm
+			| BeaconCond BeaconKind BLTerm BLTerm
+			| NearbyCond BLTerm BLTerm
+            | IfBeaconDir BeaconKind Int BLTerm BLTerm
+            | IfBaseDir Int BLTerm BLTerm
+			| For Int BLTerm
+			| While BLTerm BLTerm
+        	| RepeatUntil BLTerm BLTerm
+        	| Choose BLTerm BLTerm
             | Seq BLTerm BLTerm
             | Noop
             deriving (Eq, Ord, Show)
