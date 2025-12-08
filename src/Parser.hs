@@ -1,27 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- Uses Megaparsec to parse BotLang terms.
---
--- The BotLang grammar:
---   lang  ::= modes | term
---   modes ::= mode name { term }
---           | modes modes
---   term  ::= turnLeft
---           | turnRight
---           | moveForward
---           | dropBeacon beaconKind
---           | destroyBeacon
---           | pickUpFossil
---           | dropFossil
---           | term; term
---           | noop
---
--- where "lang" is the top-level production (i.e.,
--- an BotLang AST root is a "lang" production).
---
--- This parser does not parse noops, which are used
--- internally by the interpreter. (Noops could be
--- added to the parsed language later if needed.)
 
 module Parser
   ( parseBotLang
@@ -92,9 +71,6 @@ parseTermLhs = choice
   , try $ L.symbol sc "pickUpFossil" >> return PickUpFossil
   , try $ L.symbol sc "dropFossil" >> return DropFossil
   , try $ between (lexeme $ char '(') (lexeme $ char ')') parseTerm
-  , try $ do
-      name <- lexeme $ some alphaNumChar
-      return (CallMode name)
   ]
 
 parseBLTerm :: Parser BotLang
@@ -110,8 +86,6 @@ parseTerm = choice
   , try parseNearbyCond
   , try parseFossilCond
   , try parseFor
-  , try parseWhile
-  , try parseRepeatUntil
   , try parseChoose
   , parseTermLhs
   ]
@@ -119,8 +93,6 @@ parseTerm = choice
 parseNonSeq :: Parser BLTerm
 parseNonSeq = choice
   [ try parseFor
-  , try parseWhile
-  , try parseRepeatUntil
   , try parseChoose
   , try parseBaseDir
   , try parseBaseCond
@@ -210,7 +182,7 @@ parseFor = do
                   (lexeme $ char '}')
                   parseTerm
   return $ For num body
-
+{-
 parseWhile :: Parser BLTerm
 parseWhile = do
   _ <- L.symbol sc "while"
@@ -225,6 +197,7 @@ parseRepeatUntil = do
   _ <- L.symbol sc "until"
   cond <- parseTerm
   return $ RepeatUntil body cond
+-}
 
 parseChoose :: Parser BLTerm
 parseChoose = do

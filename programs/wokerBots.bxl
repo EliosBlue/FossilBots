@@ -1,0 +1,19 @@
+// Single worker bot that searches for fossils continuously
+mode fossilWorker {
+  for 100000 {(ifFossil pickUpFossil (choose { moveForward } { turnLeft }) ; ifBase (ifFossil dropFossil moveForward) (choose { moveForward } { turnLeft }))}
+}
+
+// Worker variant that uses different search patterns
+mode fossilWorkerAlt {
+  (for 100000 { (ifFossil (pickUpFossil ; dropBeacon kind1) (choose { (moveForward ; moveForward ; turnLeft ; moveForward ; moveForward ; moveForward) } { (moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward) })) ; ((moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward) ; (moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward) ; (moveForward ; moveForward ; turnLeft ; moveForward ; moveForward ; moveForward)) ; (for 6 { for 3 { moveForward} ; turnLeft}) ; (for 3 {moveForward} ; turnLeft ; moveForward ; moveForward)})
+}
+
+// Collector bot - focuses on finding and returning fossils
+mode collector {
+  (turnRight ; for 100000 { (ifFossil (pickUpFossil ; dropBeacon kind1) (choose { (moveForward ; moveForward ; turnLeft ; moveForward ; moveForward ; moveForward) } { (moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward) })) ; ifBase (ifBase dropFossil moveForward) (moveForward ; moveForward ; turnLeft ; moveForward ; moveForward ; moveForward) ;(for 6 {moveForward ; turnLeft})})
+}
+
+// Scout bot - explores with different pattern
+mode scout {
+  (turnLeft ; for 50000 { (ifFossil (pickUpFossil ; dropBeacon kind1) (choose { (moveForward ; moveForward ; turnLeft ; moveForward ; moveForward ; moveForward) } { (moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward) })) ; ((moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward) ; (moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward) ; (moveForward ; moveForward ; turnLeft ; moveForward ; moveForward ; moveForward)) ; (for 6 { for 3 { moveForward} ; turnLeft}) ; (moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward)})
+}

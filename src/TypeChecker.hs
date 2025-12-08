@@ -28,8 +28,7 @@ typeCheckTerm term = case term of
     DestroyBeacon  -> Right TCommand
     PickUpFossil   -> Right TCommand
     DropFossil     -> Right TCommand
-    Noop           -> Right TCommand
-    CallMode _     -> Right TCommand
+    Idle           -> Right TCommand
     Seq t1 t2 -> do
         ty1 <- typeCheckTerm t1
         ty2 <- typeCheckTerm t2
@@ -65,18 +64,6 @@ typeCheckTerm term = case term of
         if tybody == TCommand
             then Right TCommand
             else Left $ "For loop body expects a command"
-    While cond body -> do
-        tyCond <- typeCheckTerm cond
-        tyBody <- typeCheckTerm body
-        if tyCond == TCommand && tyBody == TCommand
-           then Right TCommand
-           else Left $ "While expects command-type condition and body, got: " ++ show tyCond ++ " / " ++ show tyBody
-    RepeatUntil body cond -> do
-        tyBody <- typeCheckTerm body
-        tyCond <- typeCheckTerm cond
-        if tyBody == TCommand && tyCond == TCommand
-           then Right TCommand
-           else Left $ "RepeatUntil expects command-type body and condition, got: " ++ show tyBody ++ " / " ++ show tyCond
     Choose a b -> do
         tyA <- typeCheckTerm a
         tyB <- typeCheckTerm b

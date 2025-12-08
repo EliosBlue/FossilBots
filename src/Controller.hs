@@ -23,11 +23,8 @@ data BLController = BLController
 mkBLController :: BotLang -> Either String BLController
 mkBLController prog = do
     typeCheckBL prog -- validate types
-    let modes = case prog of
-          Modes ms -> ms
-          Term _ -> []
     return $ BLController
-      { interpreter = Interpreter { stdGen = mkStdGen 0, modeTable = modes }
+      { interpreter = Interpreter { stdGen = mkStdGen 0 }
       , program = prog
       , team = Blue
       }
@@ -51,9 +48,8 @@ instance Controller BLController where
   stepBot cont facing sensing hasFossil state =
       let prog = program cont
           gen = stdGen . interpreter $ cont
-          modes = modeTable . interpreter $ cont
           botTeam = team cont
-          (gen', prog', state') = evalBL gen modes sensing botTeam hasFossil prog state
+          (gen', prog', state') = evalBL gen sensing facing botTeam hasFossil prog state
           interp' = (interpreter cont) { stdGen = gen' }
           cont' = cont { interpreter = interp', program = prog' }
       in (cont', state')
