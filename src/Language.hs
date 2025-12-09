@@ -46,6 +46,8 @@ data BLTerm = TurnLeft
 			| NearbyCond BLTerm BLTerm
             | IfBeaconDir BeaconKind Int BLTerm BLTerm
             | IfBaseDir Int BLTerm BLTerm
+			| SetMode Int
+			| IfMode Int BLTerm BLTerm
 			| For Int BLTerm
         	| Choose BLTerm BLTerm
             | Seq BLTerm BLTerm
