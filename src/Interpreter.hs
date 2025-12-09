@@ -96,7 +96,14 @@ evalTerm stdGen term sense face team hasFossil state =
   case term of
     Lang.TurnLeft  -> (Lang.Idle, stdGen, setCommand Cmd.RotateLeft state)
     Lang.TurnRight -> (Lang.Idle, stdGen, setCommand Cmd.RotateRight state)
-    Lang.MoveForward -> (Lang.Idle, stdGen, setCommand Cmd.MoveForward state)
+    Lang.MoveForward ->
+      let nextHex   = S.adjacent sense face
+          isTheirBase = case team of
+            Gold -> S.isBase nextHex Blue
+            Blue -> S.isBase nextHex Gold
+      in if isTheirBase
+          then (Lang.Idle, stdGen, state)   -- bot can not moveforward of base is enemy
+          else (Lang.Idle, stdGen, setCommand Cmd.MoveForward state)
     Lang.DropBeacon beacon -> (Lang.Idle, stdGen, setCommand (Cmd.DropBeacon beacon) state)
     Lang.DestroyBeacon -> (Lang.Idle, stdGen, setCommand Cmd.DestroyBeacon state)
     Lang.PickUpFossil -> (Lang.Idle, stdGen, setCommand Cmd.PickUpFossil state)
@@ -143,6 +150,13 @@ evalTerm stdGen term sense face team hasFossil state =
                 in if isbase
                      then evalTerm stdGen thTerm sense face team hasFossil state
                      else evalTerm stdGen elTerm sense face team hasFossil state
+    Lang.SetMode num -> 
+      let st' = memStore "mode" num state
+      in (Lang.Idle, stdGen, st')
+    Lang.IfMode num tThen tElse ->
+      case memRead "mode" state of
+        Just m | m == num -> evalTerm stdGen tThen sense face team hasFossil state
+        _ -> evalTerm stdGen tElse sense face team hasFossil state
     Lang.For num body ->
       if num <= 0
         then (Lang.Idle, stdGen, state)

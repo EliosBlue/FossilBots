@@ -29,6 +29,13 @@ typeCheckTerm term = case term of
     PickUpFossil   -> Right TCommand
     DropFossil     -> Right TCommand
     Idle           -> Right TCommand
+    SetMode _      -> Right TCommand
+    IfMode _ t1 t2 -> do
+        ty1 <- typeCheckTerm t1
+        ty2 <- typeCheckTerm t2
+        if ty1 == TCommand && ty2 == TCommand
+            then Right TCommand
+            else Left $ "IfMode branches must be commands, got: " ++ show ty1 ++ " ; " ++ show ty2
     Seq t1 t2 -> do
         ty1 <- typeCheckTerm t1
         ty2 <- typeCheckTerm t2
@@ -82,6 +89,7 @@ typeCheckTerm term = case term of
         if tyThen == TCommand && tyElse == TCommand
            then Right TCommand
            else Left $ "IfBaseDir branches must be commands, got: " ++ show tyThen ++ " / " ++ show tyElse
+
 
 
 typeCheckBL :: BotLang -> Either String ()
