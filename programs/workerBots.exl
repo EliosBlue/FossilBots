@@ -1,19 +1,40 @@
-// Single worker bot that searches for fossils continuously
-mode fossilWorker {
-  for 100000 {(ifFossil pickUpFossil (choose { moveForward } { turnLeft }) ; ifBase (ifFossil dropFossil moveForward) (choose { moveForward } { turnLeft }))}
+// Single worker bot that searches for fossils continuously - don't return on purpose just wander and hope to find base
+mode fossilWorkerSimple {
+  for 100000 { (ifFossil (pickUpFossil) (choose { moveForward } { choose { turnLeft } { turnRight} }) ; (ifBase (ifFossil dropFossil moveForward) (choose { moveForward } { choose { turnRight } { turnLeft}}))) }
 }
 
-// Worker variant that uses different search patterns
-mode fossilWorkerAlt {
-  (for 100000 { (ifFossil (pickUpFossil ; dropBeacon kind1) (choose { (moveForward ; moveForward ; turnLeft ; moveForward ; moveForward ; moveForward) } { (moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward) })) ; ((moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward) ; (moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward) ; (moveForward ; moveForward ; turnLeft ; moveForward ; moveForward ; moveForward)) ; (for 6 { for 3 { moveForward} ; turnLeft}) ; (for 3 {moveForward} ; turnLeft ; moveForward ; moveForward)})
+// Worker variants that use different starting directions
+mode fossilWorker1 {
+  setMode 0 ; for 100000 { /* MODE 0: Exploring*/ ifMode 0 (ifFossil (pickUpFossil ; dropBeacon kind2 ; setMode 1) (moveForward ; choose { turnLeft } { turnRight })) (idle ; /* MODE 1: Returning*/ ifMode 1 (ifBase (dropFossil ; setMode 2) (ifBeaconDir kind2 0 (moveForward) (ifBeaconDir kind2 1 (moveForward) (ifBeaconDir kind2 2 (moveForward) (ifBeaconDir kind2 3 (moveForward) (ifBeaconDir kind2 4 (moveForward) (ifBeaconDir kind2 5 (moveForward) (choose { turnLeft } { turnRight }))) (idle ; /* MODE 2: Cleanup*/ ifMode 2 (ifBeacon (destroyBeacon) (idle ; moveForward ; choose { turnLeft } { turnRight }) (idle))))))))) }
+}
+
+mode fossilWorker2 {
+  setMode 0 ; turnLeft; for 100000 { /* MODE 0: Exploring*/ ifMode 0 (ifFossil (pickUpFossil ; dropBeacon kind2 ; setMode 1) (moveForward ; choose { turnLeft } { turnRight })) (idle ; /* MODE 1: Returning*/ ifMode 1 (ifBase (dropFossil ; setMode 2) (ifBeaconDir kind2 0 (moveForward) (ifBeaconDir kind2 1 (moveForward) (ifBeaconDir kind2 2 (moveForward) (ifBeaconDir kind2 3 (moveForward) (ifBeaconDir kind2 4 (moveForward) (ifBeaconDir kind2 5 (moveForward) (choose { turnLeft } { turnRight }))) (idle ; /* MODE 2: Cleanup*/ ifMode 2 (ifBeacon (destroyBeacon) (idle ; moveForward ; choose { turnLeft } { turnRight }) (idle))))))))) }
+}
+
+mode fossilWorker3 {
+  setMode 0 ; turnLeft; turnLeft ; for 100000 { /* MODE 0: Exploring*/ ifMode 0 (ifFossil (pickUpFossil ; dropBeacon kind2 ; setMode 1) (moveForward ; choose { turnLeft } { turnRight })) (idle ; /* MODE 1: Returning*/ ifMode 1 (ifBase (dropFossil ; setMode 2) (ifBeaconDir kind2 0 (moveForward) (ifBeaconDir kind2 1 (moveForward) (ifBeaconDir kind2 2 (moveForward) (ifBeaconDir kind2 3 (moveForward) (ifBeaconDir kind2 4 (moveForward) (ifBeaconDir kind2 5 (moveForward) (choose { turnLeft } { turnRight }))) (idle ; /* MODE 2: Cleanup*/ ifMode 2 (ifBeacon (destroyBeacon) (idle ; moveForward ; choose { turnLeft } { turnRight }) (idle))))))))) }
+}
+
+mode fossilWorker4 {
+  setMode 0 ; turnLeft; turnLeft ; turnLeft ; for 100000 { /* MODE 0: Exploring*/ ifMode 0 (ifFossil (pickUpFossil ; dropBeacon kind2 ; setMode 1) (moveForward ; choose { turnLeft } { turnRight })) (idle ; /* MODE 1: Returning*/ ifMode 1 (ifBase (dropFossil ; setMode 2) (ifBeaconDir kind2 0 (moveForward) (ifBeaconDir kind2 1 (moveForward) (ifBeaconDir kind2 2 (moveForward) (ifBeaconDir kind2 3 (moveForward) (ifBeaconDir kind2 4 (moveForward) (ifBeaconDir kind2 5 (moveForward) (choose { turnLeft } { turnRight }))) (idle ; /* MODE 2: Cleanup*/ ifMode 2 (ifBeacon (destroyBeacon) (idle ; moveForward ; choose { turnLeft } { turnRight }) (idle))))))))) }
+}
+
+mode fossilWorker5 {
+  setMode 0 ; turnLeft; turnLeft ; turnLeft ; turnLeft ; for 100000 { /* MODE 0: Exploring*/ ifMode 0 (ifFossil (pickUpFossil ; dropBeacon kind2 ; setMode 1) (moveForward ; choose { turnLeft } { turnRight })) (idle ; /* MODE 1: Returning*/ ifMode 1 (ifBase (dropFossil ; setMode 2) (ifBeaconDir kind2 0 (moveForward) (ifBeaconDir kind2 1 (moveForward) (ifBeaconDir kind2 2 (moveForward) (ifBeaconDir kind2 3 (moveForward) (ifBeaconDir kind2 4 (moveForward) (ifBeaconDir kind2 5 (moveForward) (choose { turnLeft } { turnRight }))) (idle ; /* MODE 2: Cleanup*/ ifMode 2 (ifBeacon (destroyBeacon) (idle ; moveForward ; choose { turnLeft } { turnRight }) (idle))))))))) }
+}
+
+mode fossilWorker6 {
+  setMode 0 ; turnLeft; turnLeft ; turnLeft ; turnLeft ; turnLeft ;for 100000 { /* MODE 0: Exploring*/ ifMode 0 (ifFossil (pickUpFossil ; dropBeacon kind2 ; setMode 1) (moveForward ; choose { turnLeft } { turnRight })) (idle ; /* MODE 1: Returning*/ ifMode 1 (ifBase (dropFossil ; setMode 2) (ifBeaconDir kind2 0 (moveForward) (ifBeaconDir kind2 1 (moveForward) (ifBeaconDir kind2 2 (moveForward) (ifBeaconDir kind2 3 (moveForward) (ifBeaconDir kind2 4 (moveForward) (ifBeaconDir kind2 5 (moveForward) (choose { turnLeft } { turnRight }))) (idle ; /* MODE 2: Cleanup*/ ifMode 2 (ifBeacon (destroyBeacon) (idle ; moveForward ; choose { turnLeft } { turnRight }) (idle))))))))) }
 }
 
 // Collector bot - focuses on finding and returning fossils
 mode collector {
-  (turnRight ; for 100000 { (ifFossil (pickUpFossil ; dropBeacon kind1) (choose { (moveForward ; moveForward ; turnLeft ; moveForward ; moveForward ; moveForward) } { (moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward) })) ; ifBase (ifBase dropFossil moveForward) (moveForward ; moveForward ; turnLeft ; moveForward ; moveForward ; moveForward) ;(for 6 {moveForward ; turnLeft})})
+  // Start in explore mode
+  setMode 0 ; turnRight ; for 100000 { /* MODE 0: Exploring*/ ifMode 0 (ifFossil (pickUpFossil ; dropBeacon kind1 ; setMode 1) (moveForward ; choose { turnLeft } { turnRight })) (idle ; /* MODE 1: Returning*/ ifMode 1 (ifBase (dropFossil ; setMode 2) (ifBeaconDir kind1 0 (moveForward) (ifBeaconDir kind1 1 (moveForward) (ifBeaconDir kind1 2 (moveForward) (ifBeaconDir kind1 3 (moveForward) (ifBeaconDir kind1 4 (moveForward) (ifBeaconDir kind1 5 (moveForward) (choose { turnLeft } { turnRight }))) (idle ; /* MODE 2: Cleanup*/ ifMode 2 (ifBeacon (destroyBeacon) (idle ; moveForward ; choose { turnLeft } { turnRight }) (idle))))))))) }
 }
 
-// Scout bot - explores with different pattern
+// Scout bot - explores
 mode scout {
-  (turnLeft ; for 50000 { (ifFossil (pickUpFossil ; dropBeacon kind1) (choose { (moveForward ; moveForward ; turnLeft ; moveForward ; moveForward ; moveForward) } { (moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward) })) ; ((moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward) ; (moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward) ; (moveForward ; moveForward ; turnLeft ; moveForward ; moveForward ; moveForward)) ; (for 6 { for 3 { moveForward} ; turnLeft}) ; (moveForward ; moveForward ; moveForward ; turnRight ; moveForward ;moveForward)})
+  setMode 0 ; turnLeft ; for 100000 { ifMode 0 (ifFossil (pickUpFossil ; dropBeacon kind3 ; setMode 1) (moveForward ; choose { turnLeft } { turnRight })) (idle ; ifMode 1 (ifBeaconDir kind3 0 (moveForward) (ifBeaconDir kind3 1 (moveForward) (ifBeaconDir kind3 2 (moveForward)(ifBeaconDir kind3 3 (moveForward) (ifBeaconDir kind3 4 (moveForward) (ifBeaconDir kind3 5 (moveForward) (choose { turnLeft } { turnRight })) (idle))))))) }
 }
