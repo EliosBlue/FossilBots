@@ -47,7 +47,7 @@ parseMode = do
   name <- lexeme $ some alphaNumChar
   body <- between (lexeme $ char '{')
                   (lexeme $ char '}')
-                  parseTerm
+                  parseBlock
   return $ (name, body)
 
 parseTermLhs :: Parser BLTerm
@@ -56,20 +56,31 @@ parseTermLhs = choice
   , try $ L.symbol sc "turnRight" >> return TurnRight
   , try $ L.symbol sc "moveForward" >> return MoveForward
   , try $ do
-        _ <- L.symbol sc "dropBeacon" 
-        kindstr <- lexeme $ some alphaNumChar
-        let kind = case kindstr of
-                    "kind1" -> Kind1
-                    "kind2" -> Kind2
-                    "Kind3" -> Kind3
-                    "Kind4" -> Kind4
-                    "Kind5" -> Kind5
-                    "Kind6" -> Kind6
-                    _ -> Kind1
-        return (DropBeacon kind)
+    _ <- L.symbol sc "dropBeacon" 
+    kindstr <- lexeme $ some alphaNumChar
+    let thisKind = case kindstr of
+                "kind1" -> Kind1
+                "kind2" -> Kind2
+                "Kind3" -> Kind3
+                "Kind4" -> Kind4
+                "Kind5" -> Kind5
+                "Kind6" -> Kind6
+                _ -> Kind1
+    return (DropBeacon thisKind)
   , try $ L.symbol sc "destroyBeacon" >> return DestroyBeacon
   , try $ L.symbol sc "pickUpFossil" >> return PickUpFossil
   , try $ L.symbol sc "dropFossil" >> return DropFossil
+  , try $ L.symbol sc "idle" >> return Idle
+  , try $ do
+    _ <- L.symbol sc "setMode"
+    n <- lexeme L.decimal
+    return $ SetMode n
+  , try $ do
+    _ <- L.symbol sc "ifMode"
+    n <- lexeme L.decimal
+    th <- parseTerm
+    el <- parseTerm
+    return $ IfMode n th el
   , try $ between (lexeme $ char '(') (lexeme $ char ')') parseTerm
   ]
 
@@ -102,6 +113,11 @@ parseNonSeq = choice
   , try parseFossilCond
   , parseTermLhs
   ]
+
+parseBlock :: Parser BLTerm
+parseBlock = do
+  terms <- sepBy1 parseNonSeq (lexeme $ char ';')
+  return $ foldr1 Seq terms
 
 parseSeq :: Parser BLTerm
 parseSeq = do
@@ -180,28 +196,12 @@ parseFor = do
   num <- lexeme L.decimal
   body <- between (lexeme $ char '{')
                   (lexeme $ char '}')
-                  parseTerm
+                  parseBlock
   return $ For num body
-{-
-parseWhile :: Parser BLTerm
-parseWhile = do
-  _ <- L.symbol sc "while"
-  cond <- parseTerm
-  body <- between (lexeme $ char '{') (lexeme $ char '}') parseTerm
-  return $ While cond body
-
-parseRepeatUntil :: Parser BLTerm
-parseRepeatUntil = do
-  _ <- L.symbol sc "repeat"
-  body <- between (lexeme $ char '{') (lexeme $ char '}') parseTerm
-  _ <- L.symbol sc "until"
-  cond <- parseTerm
-  return $ RepeatUntil body cond
--}
 
 parseChoose :: Parser BLTerm
 parseChoose = do
   _ <- L.symbol sc "choose"
-  lhs <- between (lexeme $ char '{') (lexeme $ char '}') parseTerm
-  rhs <- between (lexeme $ char '{') (lexeme $ char '}') parseTerm
+  lhs <- between (lexeme $ char '{') (lexeme $ char '}') parseBlock
+  rhs <- between (lexeme $ char '{') (lexeme $ char '}') parseBlock
   return $ Choose lhs rhs
