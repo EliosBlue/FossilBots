@@ -21,15 +21,18 @@ instance Show Types where
 -- Returns the type of a term or an error string
 typeCheckTerm :: BLTerm -> Either String Types
 typeCheckTerm term = case term of
-    TurnLeft       -> Right TCommand
-    TurnRight      -> Right TCommand
-    MoveForward    -> Right TCommand
-    DropBeacon _   -> Right TCommand
-    DestroyBeacon  -> Right TCommand
-    PickUpFossil   -> Right TCommand
-    DropFossil     -> Right TCommand
-    Idle           -> Right TCommand
-    SetMode _      -> Right TCommand
+    TurnLeft -> Right TCommand
+    TurnRight -> Right TCommand
+    TurnAround -> Right TCommand
+    RandomTurns -> Right TCommand
+    MoveForward -> Right TCommand
+    DropBeacon _ -> Right TCommand
+    DestroyBeacon -> Right TCommand
+    PickUpFossil -> Right TCommand
+    DropFossil -> Right TCommand
+    Idle -> Right TCommand
+    Search _ _ -> Right TCommand
+    SetMode _ -> Right TCommand
     IfMode _ t1 t2 -> do
         ty1 <- typeCheckTerm t1
         ty2 <- typeCheckTerm t2
@@ -42,30 +45,30 @@ typeCheckTerm term = case term of
         if ty1 == TCommand && ty2 == TCommand
            then Right TCommand
            else Left $ "Sequence expects command types, got: " ++ show ty1 ++ " ; " ++ show ty2
-    FossilCond tThen tElse -> do
+    IfFossil tThen tElse -> do
         tyThen <- typeCheckTerm tThen
         tyElse <- typeCheckTerm tElse
         if tyThen == TCommand && tyElse == TCommand
            then Right TCommand
-           else Left $ "FossilCond branches must be commands, got: " ++ show tyThen ++ " / " ++ show tyElse
-    BaseCond tThen tElse -> do
+           else Left $ "IfFossil branches must be commands, got: " ++ show tyThen ++ " / " ++ show tyElse
+    IfBase tThen tElse -> do
         tyThen <- typeCheckTerm tThen
         tyElse <- typeCheckTerm tElse
         if tyThen == TCommand && tyElse == TCommand
             then Right TCommand
-            else Left $ "BaseCond branches must both be commands, got: " ++ show tyThen ++ " / " ++ show tyElse
-    BeaconCond _ tThen tElse -> do
+            else Left $ "IfBase branches must both be commands, got: " ++ show tyThen ++ " / " ++ show tyElse
+    IfBeacon _ tThen tElse -> do
         tyThen <- typeCheckTerm tThen
         tyElse <- typeCheckTerm tElse
         if tyThen == TCommand && tyElse == TCommand
             then Right TCommand
-            else Left $ "BeaconCond branches must both be commands, got: " ++ show tyThen ++ " / " ++ show tyElse
-    NearbyCond tThen tElse -> do
+            else Left $ "IfBeacon branches must both be commands, got: " ++ show tyThen ++ " / " ++ show tyElse
+    IfNearby tThen tElse -> do
         tyThen <- typeCheckTerm tThen
         tyElse <- typeCheckTerm tElse
         if tyThen == TCommand && tyElse == TCommand
             then Right TCommand
-            else Left $ "NearbyCond branches must both be commands, got: " ++ show tyThen ++ " / " ++ show tyElse
+            else Left $ "IfNearby branches must both be commands, got: " ++ show tyThen ++ " / " ++ show tyElse
     For _ body -> do
         tybody <- typeCheckTerm body
         if tybody == TCommand

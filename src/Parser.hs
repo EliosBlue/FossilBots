@@ -52,13 +52,56 @@ parseMode = do
 
 parseTermLhs :: Parser BLTerm
 parseTermLhs = choice
-  [ try $ L.symbol sc "turnLeft"  >> return TurnLeft
+  [
+    try $ L.symbol sc "turnLeft"  >> return TurnLeft
   , try $ L.symbol sc "turnRight" >> return TurnRight
+  , try $ L.symbol sc "turnAround" >> return TurnAround
+  , try $ L.symbol sc "randomTurns" >> return RandomTurns
   , try $ L.symbol sc "moveForward" >> return MoveForward
-  , try $ do
-    _ <- L.symbol sc "dropBeacon" 
-    kindstr <- lexeme $ some alphaNumChar
-    let thisKind = case kindstr of
+  , try (do
+          _ <- L.symbol sc "dropBeacon" 
+          kindstr <- lexeme $ some alphaNumChar
+          let thisKind = case kindstr of
+                "kind1" -> Kind1
+                "kind2" -> Kind2
+                "Kind3" -> Kind3
+                "Kind4" -> Kind4
+                "Kind5" -> Kind5
+                "Kind6" -> Kind6
+                _       -> Kind1
+          return (DropBeacon thisKind))
+  , try $ L.symbol sc "destroyBeacon" >> return DestroyBeacon
+  , try $ L.symbol sc "pickUpFossil" >> return PickUpFossil
+  , try $ L.symbol sc "dropFossil" >> return DropFossil
+  , try (do
+          _ <- L.symbol sc "search"
+          object <- lexeme $ some alphaNumChar
+          return $ Search object 1)
+  , try $ L.symbol sc "idle" >> return Idle
+  , try (do
+          _ <- L.symbol sc "setMode"
+          n <- lexeme L.decimal
+          return $ SetMode n)
+  , try (do
+          _ <- L.symbol sc "ifMode"
+          n <- lexeme L.decimal
+          th <- parseTerm
+          el <- parseTerm
+          return $ IfMode n th el)
+  , try (do
+          _ <- L.symbol sc "ifFossil"
+          th <- parseTerm
+          el <- parseTerm 
+          return $ IfFossil th el)
+  , try (do
+          _ <- L.symbol sc "ifBase"
+          th <- parseTerm
+          el <- parseTerm
+          return $ IfBase th el)
+  , try (do
+          _ <- L.symbol sc "ifBeacon"
+          kindstr <- lexeme $ some alphaNumChar
+          let thisKind = case kindstr of
                 "kind1" -> Kind1
                 "kind2" -> Kind2
                 "Kind3" -> Kind3
@@ -66,22 +109,48 @@ parseTermLhs = choice
                 "Kind5" -> Kind5
                 "Kind6" -> Kind6
                 _ -> Kind1
-    return (DropBeacon thisKind)
-  , try $ L.symbol sc "destroyBeacon" >> return DestroyBeacon
-  , try $ L.symbol sc "pickUpFossil" >> return PickUpFossil
-  , try $ L.symbol sc "dropFossil" >> return DropFossil
-  , try $ L.symbol sc "idle" >> return Idle
-  , try $ do
-    _ <- L.symbol sc "setMode"
-    n <- lexeme L.decimal
-    return $ SetMode n
-  , try $ do
-    _ <- L.symbol sc "ifMode"
-    n <- lexeme L.decimal
-    th <- parseTerm
-    el <- parseTerm
-    return $ IfMode n th el
-  , try $ between (lexeme $ char '(') (lexeme $ char ')') parseTerm
+          th <- parseTerm
+          el <- parseTerm
+          return $ IfBeacon thisKind th el)
+  , try (do
+          _ <- L.symbol sc "ifBeaconDir"
+          kindstr <- lexeme $ some alphaNumChar
+          let thisKind = case kindstr of
+                "kind1" -> Kind1
+                "kind2" -> Kind2
+                "Kind3" -> Kind3
+                "Kind4" -> Kind4
+                "Kind5" -> Kind5
+                "Kind6" -> Kind6
+                _ -> Kind1
+          idx <- lexeme L.decimal
+          th <- parseTerm
+          el <- parseTerm
+          return $ IfBeaconDir thisKind idx th el)
+  , try (do
+          _ <- L.symbol sc "ifNearby"
+          th <- parseTerm
+          el <- parseTerm
+          return $ IfNearby th el)
+  , try (do
+          _ <- L.symbol sc "ifBaseDir"
+          idx <- lexeme L.decimal
+          th <- parseTerm
+          el <- parseTerm
+          return $ IfBaseDir idx th el)
+  , try (do
+          _ <- L.symbol sc "for"
+          num <- lexeme L.decimal
+          body <- between (lexeme $ char '{')
+                          (lexeme $ char '}')
+                          parseBlock
+          return $ For num body)
+  , try (do
+          _ <- L.symbol sc "choose"
+          lhs <- between (lexeme $ char '{') (lexeme $ char '}') parseBlock
+          rhs <- between (lexeme $ char '{') (lexeme $ char '}') parseBlock
+          return $ Choose lhs rhs)
+  , try $ between (lexeme $ char '(') (lexeme $ char ')') parseBlock
   ]
 
 parseBLTerm :: Parser BotLang
@@ -89,119 +158,20 @@ parseBLTerm = parseTerm >>= return . Term
 
 parseTerm :: Parser BLTerm
 parseTerm = choice
-  [ try parseSeq <|> parseNonSeq
-  , try parseBaseCond
-  , try parseBaseDir
-  , try parseBeaconCond
-  , try parseBeaconDir
-  , try parseNearbyCond
-  , try parseFossilCond
-  , try parseFor
-  , try parseChoose
-  , parseTermLhs
-  ]
-
-parseNonSeq :: Parser BLTerm
-parseNonSeq = choice
-  [ try parseFor
-  , try parseChoose
-  , try parseBaseDir
-  , try parseBaseCond
-  , try parseBeaconDir
-  , try parseBeaconCond
-  , try parseNearbyCond
-  , try parseFossilCond
-  , parseTermLhs
-  ]
+  [ try parseSeq
+	, parseTermLhs
+	]
 
 parseBlock :: Parser BLTerm
 parseBlock = do
-  terms <- sepBy1 parseNonSeq (lexeme $ char ';')
-  return $ foldr1 Seq terms
+	terms <- sepBy1 parseTermLhs (lexeme $ char ';')
+	return $ foldr1 Seq terms
 
 parseSeq :: Parser BLTerm
 parseSeq = do
-  lhs <- parseNonSeq
-  _ <- optional sc
-  _ <- lexeme $ char ';'
-  _ <- optional sc
-  rhs <- parseTerm
-  return $ Seq lhs rhs
-
-parseFossilCond :: Parser BLTerm
-parseFossilCond = do
-  _ <- L.symbol sc "ifFossil"
-  th <- parseTerm
-  el <- parseTerm
-  return $ FossilCond th el
-
-parseBaseCond :: Parser BLTerm
-parseBaseCond = do
-  _ <- L.symbol sc "ifBase"
-  th <- parseTerm
-  el <- parseTerm
-  return $ BaseCond th el
-
-parseBeaconCond :: Parser BLTerm
-parseBeaconCond = do
-  _ <- L.symbol sc "ifBeacon"
-  kindstr <- lexeme $ some alphaNumChar
-  let kind = case kindstr of
-              "kind1" -> Kind1
-              "kind2" -> Kind2
-              "Kind3" -> Kind3
-              "Kind4" -> Kind4
-              "Kind5" -> Kind5
-              "Kind6" -> Kind6
-              _ -> Kind1
-  th <- parseTerm
-  el <- parseTerm
-  return $ BeaconCond kind th el
-
-parseBeaconDir :: Parser BLTerm
-parseBeaconDir = do
-  _ <- L.symbol sc "ifBeaconDir"
-  kindstr <- lexeme $ some alphaNumChar
-  let kind = case kindstr of
-              "kind1" -> Kind1
-              "kind2" -> Kind2
-              "Kind3" -> Kind3
-              "Kind4" -> Kind4
-              "Kind5" -> Kind5
-              "Kind6" -> Kind6
-              _ -> Kind1
-  idx <- lexeme L.decimal
-  th <- parseTerm
-  el <- parseTerm
-  return $ IfBeaconDir kind idx th el
-
-parseNearbyCond :: Parser BLTerm
-parseNearbyCond = do
-  _ <- L.symbol sc "ifNearby"
-  th <- parseTerm
-  el <- parseTerm
-  return $ NearbyCond th el
-
-parseBaseDir :: Parser BLTerm
-parseBaseDir = do
-  _ <- L.symbol sc "ifBaseDir"
-  idx <- lexeme L.decimal
-  th <- parseTerm
-  el <- parseTerm
-  return $ IfBaseDir idx th el
-
-parseFor :: Parser BLTerm
-parseFor = do
-  _ <- L.symbol sc "for"
-  num <- lexeme L.decimal
-  body <- between (lexeme $ char '{')
-                  (lexeme $ char '}')
-                  parseBlock
-  return $ For num body
-
-parseChoose :: Parser BLTerm
-parseChoose = do
-  _ <- L.symbol sc "choose"
-  lhs <- between (lexeme $ char '{') (lexeme $ char '}') parseBlock
-  rhs <- between (lexeme $ char '{') (lexeme $ char '}') parseBlock
-  return $ Choose lhs rhs
+	lhs <- parseTermLhs
+	_ <- optional sc
+	_ <- lexeme $ char ';'
+	_ <- optional sc
+	rhs <- parseTerm
+	return $ Seq lhs rhs
