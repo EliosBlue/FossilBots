@@ -1,0 +1,12 @@
+//mode 0 - search for fossils and leave a trail of beacons
+//mode 1 - if a fossil is found they turn around and follow their beacons back to the base
+//mode 2 - follows beacons back to fossil area
+
+//places SO many beacons, I may not win but the other team probably won't either
+
+mode fossilWorker1 {
+	setMode 0 ; randomTurns ; for 50000 { moveForward ; dropBeacon kind1 ;
+	ifMode 0 (search fossil ; ifFossil (pickUpFossil ; setMode 1 ; turnAround) (moveForward ; dropBeacon kind1 ; choose { turnLeft } { turnRight } ; moveForward ; dropBeacon kind1)) (idle) ;
+	ifMode 1 (search base ; ifBase (dropFossil ; setMode 2 ; turnAround) (search beacon)) (idle) ;
+	ifMode 2 (search beacon ; search fossil ; ifFossil (pickUpFossil ; setMode 1) (search beacon)) (idle)}
+}

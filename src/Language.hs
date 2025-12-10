@@ -17,7 +17,7 @@
 --           | noop
 
 module Language
-	( BotLang(..) -- The (..) means "also export all constructors".
+  ( BotLang(..) -- The (..) means "also export all constructors".
 	, BLTerm(..)
 	) where
 
@@ -35,12 +35,25 @@ data BotLang = Modes [(String, BLTerm)]
 
 data BLTerm = TurnLeft
             | TurnRight
+			      | TurnAround
+			      | RandomTurns
             | MoveForward
             | DropBeacon BeaconKind
             | DestroyBeacon
             | PickUpFossil
             | DropFossil
-            | FossilCond BLTerm BLTerm
+			      | Search String Int --Int only used for interpreter to stop endless spinning
+            | IfFossil BLTerm BLTerm
+			      | IfBase BLTerm BLTerm
+			      | IfBeacon BeaconKind BLTerm BLTerm
+			      | IfNearby {-String-} BLTerm BLTerm
+--			    | OnCond String BLTerm BLTerm
+            | IfBeaconDir BeaconKind Int BLTerm BLTerm
+            | IfBaseDir Int BLTerm BLTerm
+			      | SetMode Int
+			      | IfMode Int BLTerm BLTerm
+			      | For Int BLTerm
+        	  | Choose BLTerm BLTerm
             | Seq BLTerm BLTerm
-            | Noop
+            | Idle
             deriving (Eq, Ord, Show)

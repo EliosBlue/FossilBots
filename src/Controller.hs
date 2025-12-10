@@ -1,4 +1,5 @@
 -- A bot controller which operates by running an BotLang program.
+{-# LANGUAGE InstanceSigs #-}
 
 module Controller
   ( BLController
@@ -10,6 +11,7 @@ import Fryxbots.Team
 import Interpreter
 import Language
 import System.Random
+import TypeChecker
 
 
 data BLController = BLController
@@ -18,15 +20,17 @@ data BLController = BLController
   , team :: Team
   }
 
-mkBLController :: BotLang -> BLController
-mkBLController prog = BLController
-  { interpreter = Interpreter { stdGen = mkStdGen 0 }
-  , program = prog
-  , team = Blue
-  }
+mkBLController :: BotLang -> Either String BLController
+mkBLController prog = do
+    typeCheckBL prog -- validate types
+    return $ BLController
+      { interpreter = Interpreter { stdGen = mkStdGen 0 }
+      , program = prog
+      , team = Blue
+      }
 
 --
--- The Fryxbot controller for ExampleLang programs.
+-- The Fryxbot controller for BotLang programs.
 --
 instance Controller BLController where
 
@@ -44,7 +48,8 @@ instance Controller BLController where
   stepBot cont facing sensing hasFossil state =
       let prog = program cont
           gen = stdGen . interpreter $ cont
-          (gen', prog', state') = evalBL gen sensing prog state
+          botTeam = team cont
+          (gen', prog', state') = evalBL gen sensing facing botTeam hasFossil prog state
           interp' = (interpreter cont) { stdGen = gen' }
           cont' = cont { interpreter = interp', program = prog' }
       in (cont', state')
