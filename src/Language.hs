@@ -18,8 +18,8 @@
 
 module Language
   ( BotLang(..) -- The (..) means "also export all constructors".
-	, BLTerm(..)
-	) where
+  , BLTerm(..)
+  ) where
 
 import Fryxbots.Beacon
 -- For efficiency, we represent productions of the mode grammar:
@@ -35,25 +35,24 @@ data BotLang = Modes [(String, BLTerm)]
 
 data BLTerm = TurnLeft
             | TurnRight
-			      | TurnAround
-			      | RandomTurns
+			| TurnAround
+			| RandomTurns
             | MoveForward
             | DropBeacon BeaconKind
             | DestroyBeacon
             | PickUpFossil
             | DropFossil
-			      | Search String Int --Int only used for interpreter to stop endless spinning
+			| Search String Int --Int only used for interpreter to stop endless spinning
             | IfFossil BLTerm BLTerm
-			      | IfBase BLTerm BLTerm
-			      | IfBeacon BeaconKind BLTerm BLTerm
-			      | IfNearby {-String-} BLTerm BLTerm
---			    | OnCond String BLTerm BLTerm
+			| IfBase BLTerm BLTerm
+			| IfBeacon BeaconKind BLTerm BLTerm
+			| IfNearby BLTerm BLTerm
             | IfBeaconDir BeaconKind Int BLTerm BLTerm
             | IfBaseDir Int BLTerm BLTerm
-			      | SetMode Int
-			      | IfMode Int BLTerm BLTerm
-			      | For Int BLTerm
-        	  | Choose BLTerm BLTerm
+			| SetMode Int
+			| IfMode Int BLTerm BLTerm
+			| For Int BLTerm
+        	| Choose BLTerm BLTerm
             | Seq BLTerm BLTerm
             | Idle
             deriving (Eq, Ord, Show)
